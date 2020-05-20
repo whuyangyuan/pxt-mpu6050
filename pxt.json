@@ -1,6 +1,6 @@
 {
     "name": "mpu6050",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "",
     "license": "MIT",
     "dependencies": {
@@ -10,7 +10,8 @@
     "files": [
         "README.md",
         "main.blocks",
-        "main.ts"
+        "main.ts",
+        "_locales/zh-cn/MPU6050-strings.json"
     ],
     "testFiles": [
         "test.ts"

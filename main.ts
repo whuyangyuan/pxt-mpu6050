@@ -1,19 +1,20 @@
 
 /*
-MPU6050 block
-*/
+ * MPU6050 block
+ */
 //% weight=20 color=#9900CC icon="\uf13d" block="MPU6050"
 namespace MPU6050 {
 
 
     export enum REGISTER {
         POWERON = 0x6b,
-        GYRO_X = 0x43,
-        GYRO_Y = 0x45,
-        GYRO_Z = 0x47,
         ACCEL_X = 0x3b,
         ACCEL_Y = 0x3d,
-        ACCEL_Z = 0x3f
+        ACCEL_Z = 0x3f,
+        TEMPATURE = 0x41,
+        GYRO_X = 0x43,
+        GYRO_Y = 0x45,
+        GYRO_Z = 0x47
     }
 
     export enum AXIS {
@@ -45,24 +46,42 @@ namespace MPU6050 {
         return val;
     }
 
-    function initMPU6050(): void {
-        i2cWrite(MPU6050_ADDRESS, REGISTER.POWERON, 0)
-        initialized = true;
+    function checkAddress(addr: MPU6050_I2C_ADDRESS): boolean {
+        switch (addr) {
+            case MPU6050_I2C_ADDRESS.ADDR_0x68:
+                return true
+            case MPU6050_I2C_ADDRESS.ADDR_0x69:
+                return true
+            default:
+                return false
+        }
+        return false
     }
 
-
-	/**
-	 * 设置MPU6050的I2C地址
+    /**
+	 * 初始化MPU6050
 	 * @param addr [0-1] choose address; eg: MPU6050.MPU6050_I2C_ADDRESS.ADDR_0x68
 	*/
-    //% blockId="MPU6050_setAddress"
-    //% block="set MPU6050 device address %addr"
+    //% blockId="MPU6050_initMPU6050"
+    //% block="initialize MPU6050 device address %addr"
     //% weight=85
-    export function setAddress(addr: MPU6050_I2C_ADDRESS) {
-        MPU6050_ADDRESS = addr
-        if (!initialized) {
-            initMPU6050()
-        } 
+    export function initMPU6050(addr: MPU6050_I2C_ADDRESS) {
+        if (checkAddress(addr)) {
+            i2cWrite(MPU6050_ADDRESS, REGISTER.POWERON, 0)
+        }
+    }
+
+    /**
+	 * 复位MPU6050
+	 * @param addr [0-1] choose address; eg: MPU6050.MPU6050_I2C_ADDRESS.ADDR_0x68
+	*/
+    //% blockId="MPU6050_resetMPU6050"
+    //% block="initialize MPU6050 device address %addr"
+    //% weight=85
+    export function resetMPU6050(addr: MPU6050_I2C_ADDRESS) {
+        if (checkAddress(addr)) {
+            i2cWrite(MPU6050_ADDRESS, REGISTER.POWERON, 1)
+        }
     }
 
 
@@ -70,89 +89,93 @@ namespace MPU6050 {
 	 *Read byte from MPU6050 register
 	 * @param reg  register of MPU6050; eg: 0, 15, 23
 	*/
-    function readByte(reg: REGISTER): number {
-        let val = i2cRead(MPU6050_ADDRESS, reg);
-        return val;
+    function readByte(addr: MPU6050_I2C_ADDRESS, reg: REGISTER): number {
+        let val2 = i2cRead(addr, reg);
+        return val2;
     }
 
     /**
 	 *Read data from MPU6050 register
 	 * @param reg  register of MPU6050; eg: 0, 15, 23
 	*/
-    function readWord(reg: REGISTER): number {
-        let valh = i2cRead(MPU6050_ADDRESS, reg);
-        let vall = i2cRead(MPU6050_ADDRESS, reg + 1);
-        let val = (valh << 8) + vall
-        return val
+    function readWord(addr: MPU6050.MPU6050_I2C_ADDRESS, reg: REGISTER): number {
+        let valh = i2cRead(addr, reg);
+        let vall = i2cRead(addr, reg + 1);
+        let val3 = (valh << 8) + vall
+        return val3
     }
 
     /**
 	 *Read data from MPU6050 register
 	 * @param reg  register of MPU6050; eg: 0, 15, 23
 	*/
-    function readWord2C(reg: REGISTER): number {
-        let val = readWord(reg)
-        if (val > 0x8000) {
-            return -((65535 - val) + 1)
+    function readWord2C(addr: MPU6050_I2C_ADDRESS, reg: REGISTER): number {
+        let val4 = readWord(addr, reg)
+        if (val4 > 0x8000) {
+            return -((65535 - val4) + 1)
         } else {
-            return val
+            return val4
         }
     }
 
 
     /**
-	 *Read data from MPU6050 register
-	 * @param reg  register of MPU6050; eg: 0, 15, 23
-	*/
-    //% blockId=MPU6050_readReg 
-    //% block="read register |%reg| data"
+    *  读取温度
+   */
+    //% blockId=MPU6050_readTempature 
+    //% block="read tempature for device %addr"
     //% weight=75
-    export function readReg(reg: REGISTER): number {
-        let val = i2cRead(MPU6050_ADDRESS, reg);
-        return val;
+    export function readTempature(addr: MPU6050_I2C_ADDRESS): number {
+        if (checkAddress(addr)) {
+            let value = readWord2C(addr, REGISTER.TEMPATURE)
+            return 36.53 + value / 340;
+        } else {
+            return 0
+        }
     }
 
     /**
 	 * 获取线性加速度
 	*/
     //% blockId=MPU6050_get_accel
-    //% block="get axis |%axis| accel data"
+    //% block="get device |%addr| axis |%axis| accel data"
     //% weight=75
-    export function getAccel(axis: AXIS): number {
-        switch (axis) {
-            case AXIS.X:
-                return readWord2C(REGISTER.ACCEL_X)
-            case AXIS.Y:
-                return readWord2C(REGISTER.ACCEL_Y)
-            case AXIS.Z:
-                return readWord2C(REGISTER.ACCEL_Z)
-            default:
-                return 0
+    export function getAccel(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
+        if (checkAddress(addr)) {
+            switch (axis) {
+                case AXIS.X:
+                    return readWord2C(addr, REGISTER.ACCEL_X)
+                case AXIS.Y:
+                    return readWord2C(addr, REGISTER.ACCEL_Y)
+                case AXIS.Z:
+                    return readWord2C(addr, REGISTER.ACCEL_Z)
+                default:
+                    return 0
+            }
         }
         return 0
     }
 
     /**
-	 * 获取重力加速度
+	 * 获取角速度
 	*/
     //% blockId=MPU6050_get_gyro
-    //% block="get axis |%axis| gyro data"
+    //% block="get device |%addr| axis |%axis| gyro data"
     //% weight=75
-    export function getGyro(axis: AXIS): number {
-        switch (axis) {
-            case AXIS.X:
-                return readWord2C(REGISTER.GYRO_X)
-            case AXIS.Y:
-                return readWord2C(REGISTER.GYRO_Y)
-            case AXIS.Z:
-                return readWord2C(REGISTER.GYRO_Z)
-            default:
-                return 0
+    export function getGyro(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
+        if (checkAddress(addr)) {
+            switch (axis) {
+                case AXIS.X:
+                    return readWord2C(addr, REGISTER.GYRO_X)
+                case AXIS.Y:
+                    return readWord2C(addr, REGISTER.GYRO_Y)
+                case AXIS.Z:
+                    return readWord2C(addr, REGISTER.GYRO_Z)
+                default:
+                    return 0
+            }
         }
         return 0
     }
 
 }
-
-
-
