@@ -7,7 +7,16 @@ namespace MPU6050 {
 
 
     export enum REGISTER {
-        POWERON = 0x6b,
+        // 陀螺仪采样率地址
+        SMPLRT_DIV = 0x19,
+        // 低通滤波频率地址
+        CONFIG = 0x1a,
+        // 陀螺仪自检及测量范围
+        GYRO_CONFIG = 0x1b,
+        // 加速计自检、测量范围及高通滤波频率
+        ACCEL_CONFIG = 0x1c,
+        // 电源管理地
+        PWR_MGMT = 0x6b,
         ACCEL_X = 0x3b,
         ACCEL_Y = 0x3d,
         ACCEL_Z = 0x3f,
@@ -29,8 +38,17 @@ namespace MPU6050 {
         ADDR_0x69 = 0x69
     }
 
-    let initialized = false
-    let MPU6050_ADDRESS = MPU6050_I2C_ADDRESS.ADDR_0x68
+    let SMPLRT = 0x07 // 陀螺仪采样率 125Hz
+    let CONFIG = 0x06 // 低通滤波频率 5Hz
+    let GYRO_CONFIG = 0x18 // 典型值：0x18(不自检，2000deg/s) 
+    let ACCEL_CONFIG = 0x01 // 典型值：0x01(不自检，2G，5Hz)
+    let X_ACCEL_OFFSET = 0
+    let Y_ACCEL_OFFSET = 0
+    let Z_ACCEL_OFFSET = 0
+    let X_GYRO_OFFSET = 0
+    let Y_GYRO_OFFSET = 0
+    let Z_GYRO_OFFSET = 0
+
 
 
     function i2cWrite(addr: number, reg: number, value: number): void {
@@ -67,7 +85,7 @@ namespace MPU6050 {
     //% weight=85
     export function initMPU6050(addr: MPU6050_I2C_ADDRESS) {
         if (checkAddress(addr)) {
-            i2cWrite(MPU6050_ADDRESS, REGISTER.POWERON, 0)
+            i2cWrite(addr, REGISTER.PWR_MGMT, 0)
         }
     }
 
@@ -80,7 +98,11 @@ namespace MPU6050 {
     //% weight=85
     export function resetMPU6050(addr: MPU6050_I2C_ADDRESS) {
         if (checkAddress(addr)) {
-            i2cWrite(MPU6050_ADDRESS, REGISTER.POWERON, 1)
+            i2cWrite(addr, REGISTER.PWR_MGMT, 1)
+            i2cWrite(addr, REGISTER.SMPLRT_DIV, SMPLRT)
+            i2cWrite(addr, REGISTER.CONFIG, CONFIG)
+            i2cWrite(addr, REGISTER.GYRO_CONFIG, GYRO_CONFIG)
+            i2cWrite(addr, REGISTER.ACCEL_CONFIG, ACCEL_CONFIG)
         }
     }
 
@@ -135,7 +157,30 @@ namespace MPU6050 {
     }
 
     /**
-	 * 获取线性加速度
+	 * 倾斜角度
+	*/
+    //% blockId=MPU6050_get_angle
+    //% block="get device |%addr| axis |%axis| accel data"
+    //% weight=75
+    export function getAngle(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
+        if (checkAddress(addr)) {
+            switch (axis) {
+                case AXIS.X:
+                    return Math.acos(getAccel(addr, axis)) * 57.29577
+                case AXIS.Y:
+                    return Math.acos(getAccel(addr, axis)) * 57.29577
+                case AXIS.Z:
+                    return Math.acos(getAccel(addr, axis)) * 57.29577
+                default:
+                    return 0
+            }
+        }
+        return 0
+    }
+
+
+    /**
+	 * 获取加速度 单位g
 	*/
     //% blockId=MPU6050_get_accel
     //% block="get device |%addr| axis |%axis| accel data"
@@ -144,17 +189,64 @@ namespace MPU6050 {
         if (checkAddress(addr)) {
             switch (axis) {
                 case AXIS.X:
-                    return readWord2C(addr, REGISTER.ACCEL_X)
+                    return (readWord2C(addr, REGISTER.ACCEL_X) + X_ACCEL_OFFSET) / 16384.0
                 case AXIS.Y:
-                    return readWord2C(addr, REGISTER.ACCEL_Y)
+                    return (readWord2C(addr, REGISTER.ACCEL_Y) + Y_ACCEL_OFFSET) / 16384.0
                 case AXIS.Z:
-                    return readWord2C(addr, REGISTER.ACCEL_Z)
+                    return (readWord2C(addr, REGISTER.ACCEL_Z) + Z_ACCEL_OFFSET) / 16384.0
                 default:
                     return 0
             }
         }
         return 0
     }
+
+    /**
+	 * 设置加速度 偏差
+	*/
+    //% blockId=MPU6050_set_accel_offset
+    //% block="set device |%addr| axis |%axis| accel offset %offset"
+    //% weight=75
+    export function setAccelOffset(axis: AXIS, offset: number) {
+        switch (axis) {
+            case AXIS.X:
+                X_ACCEL_OFFSET = offset
+                break
+            case AXIS.Y:
+                Y_ACCEL_OFFSET = offset
+                break
+            case AXIS.Z:
+                Z_ACCEL_OFFSET = offset
+                break
+            default:
+                break
+        }
+        return
+    }
+
+    /**
+	 * 设置角速度 偏差
+	*/
+    //% blockId=MPU6050_set_gyro_offset
+    //% block="set device |%addr| axis |%axis| gyro offset %offset"
+    //% weight=75
+    export function setGyroOffset(axis: AXIS, offset: number) {
+        switch (axis) {
+            case AXIS.X:
+                X_GYRO_OFFSET = offset
+                break
+            case AXIS.Y:
+                Y_GYRO_OFFSET = offset
+                break
+            case AXIS.Z:
+                Z_GYRO_OFFSET = offset
+                break
+            default:
+                break
+        }
+        return
+    }
+
 
     /**
 	 * 获取角速度
@@ -166,11 +258,11 @@ namespace MPU6050 {
         if (checkAddress(addr)) {
             switch (axis) {
                 case AXIS.X:
-                    return readWord2C(addr, REGISTER.GYRO_X)
+                    return (readWord2C(addr, REGISTER.GYRO_X) + X_GYRO_OFFSET)
                 case AXIS.Y:
-                    return readWord2C(addr, REGISTER.GYRO_Y)
+                    return (readWord2C(addr, REGISTER.GYRO_Y) + Y_GYRO_OFFSET)
                 case AXIS.Z:
-                    return readWord2C(addr, REGISTER.GYRO_Z)
+                    return (readWord2C(addr, REGISTER.GYRO_Z) + Z_GYRO_OFFSET)
                 default:
                     return 0
             }
