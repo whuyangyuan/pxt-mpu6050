@@ -160,7 +160,7 @@ namespace MPU6050 {
 	 * 倾斜角度
 	*/
     //% blockId=MPU6050_get_angle
-    //% block="get device |%addr| axis |%axis| accel data"
+    //% block="get device |%addr| axis |%axis| angle data"
     //% weight=75
     export function getAngle(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
         if (checkAddress(addr)) {
