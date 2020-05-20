@@ -76,7 +76,7 @@ namespace MPU6050 {
 	 * @param addr [0-1] choose address; eg: MPU6050.MPU6050_I2C_ADDRESS.ADDR_0x68
 	*/
     //% blockId="MPU6050_resetMPU6050"
-    //% block="initialize MPU6050 device address %addr"
+    //% block="reset MPU6050 device address %addr"
     //% weight=85
     export function resetMPU6050(addr: MPU6050_I2C_ADDRESS) {
         if (checkAddress(addr)) {
