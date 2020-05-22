@@ -1,3 +1,7 @@
+/*
+load dependency
+"MPU6050": "file:../pxt-mpu6050"
+*/
 
 /*
  * MPU6050 block
