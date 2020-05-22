@@ -85,7 +85,7 @@ namespace MPU6050 {
 	 * @param addr [0-1] choose address; eg: MPU6050.MPU6050_I2C_ADDRESS.ADDR_0x68
 	*/
     //% blockId="MPU6050_initMPU6050"
-    //% block="initialize MPU6050 device address %addr"
+    //% block="初始化地址 %addr 的MPU6050"
     //% weight=85
     export function initMPU6050(addr: MPU6050_I2C_ADDRESS) {
         if (checkAddress(addr)) {
@@ -98,7 +98,7 @@ namespace MPU6050 {
 	 * @param addr [0-1] choose address; eg: MPU6050.MPU6050_I2C_ADDRESS.ADDR_0x68
 	*/
     //% blockId="MPU6050_resetMPU6050"
-    //% block="reset MPU6050 device address %addr"
+    //% block="重置地址 %addr 的MPU6050"
     //% weight=85
     export function resetMPU6050(addr: MPU6050_I2C_ADDRESS) {
         if (checkAddress(addr)) {
@@ -149,7 +149,7 @@ namespace MPU6050 {
     *  读取温度
    */
     //% blockId=MPU6050_readTempature 
-    //% block="read tempature for device %addr"
+    //% block="读取温度，设备地址 %addr"
     //% weight=75
     export function readTempature(addr: MPU6050_I2C_ADDRESS): number {
         if (checkAddress(addr)) {
@@ -164,7 +164,7 @@ namespace MPU6050 {
 	 * 倾斜角度
 	*/
     //% blockId=MPU6050_get_angle
-    //% block="get device |%addr| axis |%axis| angle data"
+    //% block="获取设备 |%addr| 方向 |%axis| 的倾斜角度"
     //% weight=75
     export function getAngle(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
         if (checkAddress(addr)) {
@@ -187,7 +187,7 @@ namespace MPU6050 {
 	 * 获取加速度 单位g
 	*/
     //% blockId=MPU6050_get_accel
-    //% block="get device |%addr| axis |%axis| accel data"
+    //% block="获取设备 |%addr| 方向 |%axis| 的加速度"
     //% weight=75
     export function getAccel(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
         if (checkAddress(addr)) {
@@ -209,7 +209,7 @@ namespace MPU6050 {
 	 * 设置加速度 偏差
 	*/
     //% blockId=MPU6050_set_accel_offset
-    //% block="set device |%addr| axis |%axis| accel offset %offset"
+    //% block="设置设备 |%addr| 方向 |%axis| 的加速度偏移 %offset"
     //% weight=75
     export function setAccelOffset(axis: AXIS, offset: number) {
         switch (axis) {
@@ -232,7 +232,7 @@ namespace MPU6050 {
 	 * 设置角速度 偏差
 	*/
     //% blockId=MPU6050_set_gyro_offset
-    //% block="set device |%addr| axis |%axis| gyro offset %offset"
+    //% block="设置设备 |%addr| 方向 |%axis| 的角速度偏移 %offset"
     //% weight=75
     export function setGyroOffset(axis: AXIS, offset: number) {
         switch (axis) {
@@ -256,7 +256,7 @@ namespace MPU6050 {
 	 * 获取角速度
 	*/
     //% blockId=MPU6050_get_gyro
-    //% block="get device |%addr| axis |%axis| gyro data"
+    //% block="获取设备 |%addr| 方向 |%axis| 的角速度"
     //% weight=75
     export function getGyro(addr: MPU6050_I2C_ADDRESS, axis: AXIS): number {
         if (checkAddress(addr)) {
